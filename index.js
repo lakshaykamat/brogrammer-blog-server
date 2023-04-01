@@ -6,6 +6,7 @@ const errorHandler = require('./middleware/errorHandler')
 database()
 const port = 80
 const app = express()
+app.use(cors())
 app.use(express.json())
 
 app.use("/api/blog",require("./routes/blogRoutes"))
