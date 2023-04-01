@@ -14,4 +14,4 @@ app.use("/api/blog",require("./routes/blogRoutes"))
 app.use("/api/category",require("./routes/categoryRoutes"))
 
 app.use(errorHandler)
-app.listen(port, () => console.log(`Example app listening on port ${PORT}!`))
+app.listen(PORT, () => console.log(`Example app listening on port ${PORT}!`))
