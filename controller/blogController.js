@@ -1,9 +1,7 @@
 const BlogModel = require("../models/BlogModel.js");
 const CategoryModel = require("../models/CategoryModel.js");
 const { tryCatch } = require("../utils/tryCatch.js");
-const fs = require("fs");
 const { marked } = require("marked");
-const showdown = require("showdown");
 const createDOMPurify = require("dompurify");
 const { JSDOM } = require("jsdom");
 const DOMPurify = createDOMPurify(new JSDOM().window);
@@ -48,7 +46,6 @@ const CreateBlog = tryCatch(
 
 const editBlog = tryCatch(
   asyncHandler(async (req, res) => {
-    const { title, image, description, body, category } = req.body;
     const blog = await BlogModel.findById(req.params.id);
     if (!blog) {
       throw new Error("Blog not found");
@@ -56,13 +53,7 @@ const editBlog = tryCatch(
 
     const updatedBlog = await BlogModel.findByIdAndUpdate(
       req.params.id,
-      {
-        title,
-        image,
-        description,
-        body: DOMPurify.sanitize(marked(body)),
-        category,
-      },
+      req.body,
       { new: true }
     );
 
