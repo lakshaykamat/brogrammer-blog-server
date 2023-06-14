@@ -10,34 +10,49 @@ const asyncHandler = require("express-async-handler");
 
 const getAllBlogs = tryCatch(
   asyncHandler(async (req, res) => {
-    const blogs = await BlogModel.find();
-    res.json(blogs);
+    const { title, category } = req.query
+
+    if (title || category) {
+      if (title) {
+        const blogs = await BlogModel.find({ title });
+        res.json(blogs)
+      } else {
+        const blogs = await BlogModel.find({ category });
+        res.json(blogs);
+      }
+    } else if (title && category) {
+      const blogs = await BlogModel.find({ title, category });
+      res.json(blogs);
+    } else {
+      const blogs = await BlogModel.find();
+      res.json(blogs);
+    }
+
   })
 );
 
 const CreateBlog = tryCatch(
   asyncHandler(async (req, res) => {
     const { title, image, description, body, category } = req.body;
-
     //Check this category exists or not
-    const existingCategory = await CategoryModel.findOne({ name: category });
+    // const existingCategory = await CategoryModel.findOne({ name: category });
 
     //if category not exits then create a new one
-    if (!existingCategory) {
-      await CategoryModel.create({ name: category, blogCount: 1 });
+    // if (!existingCategory) {
+    // await CategoryModel.create({ name: category, blogCount: 1 });
 
-      // if category exists then increase blogCount by 1
-    } else {
-      existingCategory.blogCount += 1;
-      await existingCategory.save();
-    }
+    // if category exists then increase blogCount by 1
+    // } else {
+    //   existingCategory.blogCount += 1;
+    //   await existingCategory.save();
+    // }
 
     //Convert Markdown to HTML and create blogPost
     const blog = await BlogModel.create({
       title,
       image,
       description,
-      body: DOMPurify.sanitize(marked(body)),
+      body,
       category,
     });
     res.status(201).json(blog);
@@ -51,9 +66,27 @@ const editBlog = tryCatch(
       throw new Error("Blog not found");
     }
 
+    const { title, image, description, body, category } = req.body;
+
+    const desiredKeys = ["title", "description", "image", "body", "category"];
+
+    const objectKeys = Object.keys(desiredKeys);
+
+    // Check if the object has the same keys as the desiredKeys array
+    const hasOnlyDesiredKeys = objectKeys.length === desiredKeys.length && objectKeys.every(key => desiredKeys.includes(key));
+
+    if (!hasOnlyDesiredKeys) {
+      res.status(400);
+      throw new Error("Can only contain the desiredKeys mention: " + desiredKeys);
+    }
+
     const updatedBlog = await BlogModel.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      title,
+      image,
+      description,
+      body,
+      category,
       { new: true }
     );
 
@@ -74,6 +107,10 @@ const getBlog = tryCatch(
 
 const deleteBlog = tryCatch(
   asyncHandler(async (req, res) => {
+    if (!req.params.id) {
+      res.status(400);
+      throw new Error("id is required");
+    }
     const blog = await BlogModel.findById({ _id: req.params.id });
     if (!blog) {
       res.status(404);

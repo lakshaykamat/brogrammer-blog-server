@@ -22,7 +22,7 @@ const BlogSchema = mongoose.Schema(
             default: Date.now().toString()
         },
         category:{
-            type:String,
+            type:Array,
             required:[true,"Category is required!"]
         }
     },
