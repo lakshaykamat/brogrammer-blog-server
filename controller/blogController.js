@@ -1,27 +1,24 @@
 const BlogModel = require("../models/BlogModel.js");
-const CategoryModel = require("../models/CategoryModel.js");
 const { tryCatch } = require("../utils/tryCatch.js");
-const { marked } = require("marked");
-const createDOMPurify = require("dompurify");
-const { JSDOM } = require("jsdom");
-const DOMPurify = createDOMPurify(new JSDOM().window);
-
 const asyncHandler = require("express-async-handler");
+const UserModel = require("../models/UserModel.js");
+const auth = require("../middleware/verifyToken.js")
 
 const getAllBlogs = tryCatch(
   asyncHandler(async (req, res) => {
-    const { title, category } = req.query
 
-    if (title || category) {
-      if (title) {
-        const blogs = await BlogModel.find({ title });
+    const { slug, category } = req.query
+
+    if (slug || category) {
+      if (slug) {
+        const blogs = await BlogModel.find({ slug });
         res.json(blogs)
       } else {
         const blogs = await BlogModel.find({ category });
         res.json(blogs);
       }
-    } else if (title && category) {
-      const blogs = await BlogModel.find({ title, category });
+    } else if (slug && category) {
+      const blogs = await BlogModel.findOne({ slug, category });
       res.json(blogs);
     } else {
       const blogs = await BlogModel.find();
@@ -30,33 +27,36 @@ const getAllBlogs = tryCatch(
 
   })
 );
-
-const CreateBlog = tryCatch(
+const getAllCategory = tryCatch(
   asyncHandler(async (req, res) => {
-    const { title, image, description, body, category } = req.body;
-    //Check this category exists or not
-    // const existingCategory = await CategoryModel.findOne({ name: category });
+    const data = await BlogModel.find();
+    const categories = [...new Set(data.map(item => item.category))];
+    res.json(categories);
+  }
+  ))
+const CreateBlog = tryCatch(asyncHandler(async (req, res) => {
+  const { title, image, description, body, category, slug, publishedAt, author } = req.body;
 
-    //if category not exits then create a new one
-    // if (!existingCategory) {
-    // await CategoryModel.create({ name: category, blogCount: 1 });
-
-    // if category exists then increase blogCount by 1
-    // } else {
-    //   existingCategory.blogCount += 1;
-    //   await existingCategory.save();
-    // }
-
+  const _slug = await BlogModel.find({ slug })
+  if (_slug.length > 0) {
+    res.status(400).send({message:"Slug already exists"})
+  } else {
     //Convert Markdown to HTML and create blogPost
     const blog = await BlogModel.create({
       title,
       image,
       description,
       body,
+      slug,
+      author,
+      publishedAt,
       category,
     });
+
     res.status(201).json(blog);
-  })
+  }
+
+})
 );
 
 const editBlog = tryCatch(
@@ -66,27 +66,9 @@ const editBlog = tryCatch(
       throw new Error("Blog not found");
     }
 
-    const { title, image, description, body, category } = req.body;
-
-    const desiredKeys = ["title", "description", "image", "body", "category"];
-
-    const objectKeys = Object.keys(desiredKeys);
-
-    // Check if the object has the same keys as the desiredKeys array
-    const hasOnlyDesiredKeys = objectKeys.length === desiredKeys.length && objectKeys.every(key => desiredKeys.includes(key));
-
-    if (!hasOnlyDesiredKeys) {
-      res.status(400);
-      throw new Error("Can only contain the desiredKeys mention: " + desiredKeys);
-    }
-
     const updatedBlog = await BlogModel.findByIdAndUpdate(
       req.params.id,
-      title,
-      image,
-      description,
-      body,
-      category,
+      req.body,
       { new: true }
     );
 
@@ -120,29 +102,17 @@ const deleteBlog = tryCatch(
     //if blog found then delete  it
     await BlogModel.findByIdAndDelete({ _id: req.params.id });
 
-    //GET the blog category you deleted
-    const category = await CategoryModel.findOne({ name: blog.category });
 
-    //if category exits and reduce the blogCount to -1
-    if (category) {
-      category.blogCount = category.blogCount - 1;
-      //if blogCount is 0 it's means there is no blog for this category so also delete the category
-      if (category.blogCount === 0) {
-        await CategoryModel.findByIdAndDelete({ _id: category._id });
-        return res.status(200).json({ blog, category });
-      }
-      await category.save();
-    }
-
-    res.status(200).json({ blog, category });
+    res.status(200).json({ blog });
   })
 );
 
 const deleteAllBlog = tryCatch(
   asyncHandler(async (req, res) => {
-    await CategoryModel.deleteMany();
-    await BlogModel.deleteMany();
-    res.status(200).json({ message: "Deleted" });
+    const a = await CategoryModel.deleteMany();
+    const b = await BlogModel.deleteMany();
+    const c = await UserModel.deleteMany();
+    res.status(200).json({ category: a, blogs: b, user: c });
   })
 );
 
@@ -153,4 +123,5 @@ module.exports = {
   editBlog,
   getBlog,
   deleteAllBlog,
+  getAllCategory
 };

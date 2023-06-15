@@ -3,11 +3,12 @@ const express = require('express')
 const path = require('path')
 const port = 80|| process.env.PORT
 const cors = require('cors')
-const database = require('./database/db')
+const BlogModel = require("./models/BlogModel.js");
+const database = require('./database/db.js')
 const errorHandler = require('./middleware/errorHandler')
+const auth = require('./middleware/verifyToken.js')
 database()
 const app = express()
-
 
 // Middleware
 app.use(cors())
@@ -23,15 +24,23 @@ app.use(
 app.set('view engine', 'ejs')
 
 
+//Page Routes
 app.get("/",(req, res) => {
   res.render('index')
 })
-app.post("/",(req, res) => {
-    console.log(req.body)
-});
+app.get("/createblog",(req, res) => {
+  res.render('createblog')
+})
+
+app.get("/blogs",async(req,res) => {
+  const blogs = await BlogModel.find();
+  res.render('blogs',{blogs})
+})
+
+//API Routes
 app.use("/api/blog",require("./routes/blogRoutes"))
 
-app.use("/api/category",require("./routes/categoryRoutes"))
+app.use("/api/user",require("./routes/userRoutes"))
 
 app.use(errorHandler)
 app.listen(port, () => console.log(`Server is running now :)`))

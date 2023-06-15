@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <div>
+        <h1>All BLogs</h1>
+
+        <div>
+            <ol>
+                <% blogs.map((item,index)=>{%>
+                    <li>
+                        <%=item.title %>
+                    </li>
+                    <% }) %>
+            </ol>
+        </div>
+        <a href="/">Home</a>
+        <a href="/createblog">Create Blog</a>
+
+    </div>
+</body>
+
+</html>

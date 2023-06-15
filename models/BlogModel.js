@@ -17,12 +17,21 @@ const BlogSchema = mongoose.Schema(
             type: String,
             required: [true, "Body is required!"]
         },
+        author:{
+            type:String,
+            required:[true,"Author is required!"]
+        },
         publishedAt: {
-            type: Date,
-            default: Date.now().toString()
+            type: String,
+            required: [true, "Published Date is required!"]
+        },
+        slug:{
+            type:String,
+            required:[true,"Slug is required!"],
+            undefined: [true,"Slug must be unique"]
         },
         category:{
-            type:Array,
+            type:String,
             required:[true,"Category is required!"]
         }
     },
