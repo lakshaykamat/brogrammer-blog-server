@@ -5,24 +5,27 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const {registerValidator,loginValidator} = require('../lib/validation.js') 
 
-
+//@desc Get All Users
+//@route /api/user/all
+//@access public 
 const getAllUser = tryCatch(asyncHandler(async (req, res) => {
     const users = await UserModel.find({})
     res.json(users)
 }))
 
 
+//@desc Get All Users
+//@route /api/user/all
+//@access public 
 const getUser = tryCatch(asyncHandler(async (req, res) => {
     const user = await UserModel.findById(req.params.id)
     res.json(user)
 }))
 
 
-const editUser = tryCatch(asyncHandler(async (req, res) => {
-
-}))
-
-
+//@desc Get All Users
+//@route /api/user/all
+//@access public 
 const deleteUser = tryCatch(asyncHandler(async (req, res) => {
     const user = await UserModel.findById(req.params.id)
     if (!user) {
@@ -32,6 +35,10 @@ const deleteUser = tryCatch(asyncHandler(async (req, res) => {
     res.json(data)
 }))
 
+
+//@desc Login user
+//@route /api/user/login
+//@access public 
 const loginUser = tryCatch(asyncHandler(async (req, res) => {
     const { email, password } = req.body
 
@@ -52,8 +59,13 @@ const loginUser = tryCatch(asyncHandler(async (req, res) => {
         res.header('auth-token', token).json({token})
     }
 }))
+
+
+//@desc Register new uer
+//@route /api/user/register
+//@access public 
 const registerUser = tryCatch(asyncHandler(async (req, res) => {
-    const { name, email, password } = req.body
+    const { name, email, password,bio, designation,image} = req.body
 
     const {error} = registerValidator(req.body)
 
@@ -71,7 +83,10 @@ const registerUser = tryCatch(asyncHandler(async (req, res) => {
         const newUser = await UserModel.create({
             name,
             email,
-            password: hashedPassword
+            password: hashedPassword,
+            bio,
+            designation,
+            image
         })
         res.json(newUser)
     }
@@ -81,7 +96,6 @@ const registerUser = tryCatch(asyncHandler(async (req, res) => {
 module.exports = {
     getAllUser,
     deleteUser,
-    editUser,
     getUser,
     loginUser,
     registerUser
