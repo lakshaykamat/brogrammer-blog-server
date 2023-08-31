@@ -11,7 +11,7 @@ const getAllBlogs = tryCatch(
 
     if (slug || category) {
       if (slug) {
-        const blogs = await BlogModel.find({ slug });
+        const blogs = await BlogModel.findOne({ slug });
         res.json(blogs)
       } else {
         const blogs = await BlogModel.find({ category });

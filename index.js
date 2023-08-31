@@ -1,7 +1,7 @@
 require('dotenv').config()
 const express = require('express')
 const path = require('path')
-const port = 80|| process.env.PORT
+const port = 8000|| process.env.PORT
 const cors = require('cors')
 const BlogModel = require("./models/BlogModel.js");
 const database = require('./database/db.js')
